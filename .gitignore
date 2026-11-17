@@ -1,0 +1,29 @@
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+
+# Local runtime and user data (store outside the repository)
+/data/
+/uploads/
+/storage/
+/backups/
+/volumes/
+/design-working/
+*.dump
+*.sqlite
+*.sqlite3
+*.db
+
+# Dependencies, generated output, and machine files
+node_modules/
+.next/
+dist/
+coverage/
+test-results/
+playwright-report/
+.DS_Store
+*.log

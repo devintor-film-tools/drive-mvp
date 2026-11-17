@@ -1,7 +1,7 @@
 # ADR 0001: Local runtime and artifact ownership
 
 Date: 2026-11-16
-Status: accepted by user; repository publication pending
+Status: partially superseded by ADR 0002 for visual artifacts; local runtime and GitHub decisions remain accepted; repository publication pending
 Owner: engineering lead
 
 ## Decision

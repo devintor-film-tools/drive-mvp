@@ -26,4 +26,4 @@ No cloud application runtime, public tunnel, paid subscription, or usage-billed 
 
 ## Documentation maintenance
 
-Update affected contracts and diagrams in the same code review as the change. Record owner, status, and last verified revision. Keep decision history; mark superseded decisions rather than rewriting history. Link the reviewed Drive artifact revision from implementation changes.
+Update affected contracts and diagram references in the same code review as the change. Record owner, status, and last verified revision. Keep decision history; mark superseded decisions rather than rewriting history. Link the reviewed Figma/FigJam artifact revision from implementation changes once the workspace is connected. Preserve existing Drive baseline links as historical references. Engineering contracts remain authoritative in Git; FigJam diagrams explain those contracts and must be updated when their sources change.

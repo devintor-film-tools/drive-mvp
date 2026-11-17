@@ -1,6 +1,6 @@
 # First-upload HTTP contract
 
-Date: 2026-11-16 · Status: proposed; executable schema follows implementation
+Date: 2026-11-16 · Status: implemented contract; runtime validation pending
 Owner: engineering lead
 
 Same-origin JSON API, authenticated Django session, CSRF token on mutations. UUIDs are opaque identifiers, not credentials. UTC timestamps use RFC 3339. All integer sizes are bytes. Server returns `Cache-Control: no-store` for private metadata/status. Use request IDs for diagnosis.
@@ -16,8 +16,11 @@ Same-origin JSON API, authenticated Django session, CSRF token on mutations. UUI
 | GET /api/uploads/{id} | — | 200 Upload with current state and recovery instructions |
 | GET /api/uploads/active | — | 200 `{upload: Upload|null}` for initial reconciliation; route resolves before UUID route |
 | GET /api/files/{id}/content | — | 200 authorized attachment; internal integrity probe initially, user-facing download deferred |
+| GET /api/health | — | 200 `{status: "ok"}` after database and storage readiness checks; no user data |
 
-`File = {id, name, size_bytes, sha256, created_at}`. Owner and blob paths are never client-selected. `Upload = {id, state, expected_bytes, received_bytes, expires_at, retry_after_ms, can_retry, file: File|null}`. RECEIVING status bytes are last persisted telemetry, not a durable completion guarantee. Browser send progress is local transport progress. Only COMPLETE returns a non-null File.
+`File = {id, name, size_bytes, sha256, created_at}`. Owner and blob paths are never client-selected. `Upload = {id, name, state, expected_bytes, received_bytes, expires_at, retry_after_ms, can_retry, error_code, file: File|null}`. `error_code` preserves a confirmed attempt failure for actionable recovery after refresh. RECEIVING status bytes are last persisted telemetry, not a durable completion guarantee. Browser send progress is local transport progress. Only COMPLETE returns a non-null File.
+
+Authenticated session payload: `{user: {id, username, display_name}, storage: {used_bytes, reserved_bytes, quota_bytes}, limits: {max_file_bytes}, csrf_token}`. The signed-out 401 also contains `csrf_token` for protected sign-in. File-list responses include current `storage` accounting alongside `items` and `next_cursor`.
 
 `Error = {error: {code, message, request_id, retry_after_ms?, upload_id?}}`. The UI maps stable codes to approved copy; it does not display raw exceptions. 400 invalid metadata; 401 session expired; 403 CSRF rejected; 404 absent/not owned; 409 active upload, metadata/idempotency mismatch, spent attempt or stale generation; 410 upload expired; 413 file too large; 422 content length mismatch; 429 rate limit; 507 quota/full disk; 503 temporary storage/database failure. Distinguish quota from device-full using error.code.
 

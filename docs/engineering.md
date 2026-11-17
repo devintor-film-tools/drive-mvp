@@ -1,7 +1,7 @@
 # Engineering foundation
 
 Date: 2026-11-16
-Status: architecture proposal A recommended; application not implemented
+Status: architecture A implemented in source; runtime and release gates pending
 Owner: engineering lead
 
 ## Prepared technical package
@@ -12,7 +12,7 @@ Owner: engineering lead
 - [Local setup, backup/restore and migration requirements](architecture/operations.md)
 - [Interface behavior and accessibility specification](design-first-upload.md)
 
-Explanatory system, data model, lifecycle and sequence diagrams are in FigJam; exact nodes are listed in the [design index](design-index.md). These specifications are proposed. Database migrations, executable API schemas and operational scripts will be created and validated with the first implementation.
+Explanatory system, data model, lifecycle and sequence diagrams are in FigJam; exact nodes are listed in the [design index](design-index.md). Database migrations and operational scripts now exist. API validation is implemented in Django and exercised by authored acceptance tests; a generated OpenAPI schema is not present. See [implementation review](implementation-review.md) for verified versus pending checks. No runtime gate has passed in this sandbox.
 
 ## Required artifacts for the first workflow
 

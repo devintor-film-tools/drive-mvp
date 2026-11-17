@@ -1,0 +1,8 @@
+# Dependency pins verified against official release metadata 2026-11-16.
+# Installation/compatibility must be verified on the target host; this is not a hash lock.
+Django==5.2.19
+asgiref==3.13.0
+sqlparse==0.6.1
+psycopg[binary]==3.3.9
+psycopg-binary==3.3.9
+waitress==3.0.2

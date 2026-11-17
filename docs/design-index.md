@@ -3,6 +3,8 @@
 Date: 2026-11-16
 Owner: design lead
 
+Implementation update: React screens now implement the selected interaction, local sign-in and failure recovery. Source lives in `frontend/`; browser comparison to the reviewed Figma frames remains blocked by missing asset downloads and sandbox server restrictions. Live Figma nodes remain the design targets, not evidence that the running application matches them. See [verification](verification.md).
+
 Figma Design and FigJam are the canonical visual workspace under [ADR 0002](decisions/0002-figma-visual-workspace.md). File creation, native spec read/write, and FigJam diagram editing are verified on the existing student plan. No subscription changes were made.
 
 ## Active visual files

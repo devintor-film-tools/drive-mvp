@@ -1,6 +1,6 @@
 # ADR 0003: First-upload architecture
 
-Date: 2026-11-16 · Status: recommended for the first implementation, not implemented
+Date: 2026-11-16 · Status: proposal A selected for the user-authorized implementation; source implemented, runtime verification pending
 Owner: engineering lead · Scope: one private file upload
 
 ## Three proposals
@@ -17,7 +17,7 @@ These options use free software on existing hardware. This is not a promise that
 
 Start with A. Use Django's existing session authentication and CSRF protection, a custom user model with a stable UUID from the first migration, and PostgreSQL from the first workflow. Seed the first local user with a management command; never bypass authorization for development. Use the latest supported security patch of the selected LTS at implementation time and lock dependencies then.
 
-Use a single application deployment, not microservices. React serves the interaction; Django owns identity, authorization, validation, upload finalization, and private downloads. A narrow BlobStore interface separates storage operations from domain rules. A Django maintenance command handles expired attempts and orphan cleanup; v1 needs no queue broker.
+Use a single application deployment. React serves the interaction; Django owns identity, authorization, validation, upload finalization, and private downloads. A narrow BlobStore interface separates storage operations from domain rules. A Django maintenance command handles expired attempts and orphan cleanup; v1 needs no queue broker. The local implementation uses Waitress, which buffers incoming HTTP bodies before Django handles them; see the operational limitation in the protocol and runbook.
 
 Proposed defaults: one active upload per account, 100 MiB per file, 1 GiB total storage, whole-file retry. These are deliberate first-workflow limits, not scaling claims. Do not build sharing, search, folders, previews, or background synchronization.
 

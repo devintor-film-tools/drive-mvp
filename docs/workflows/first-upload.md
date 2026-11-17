@@ -1,7 +1,7 @@
 # First private file upload
 
 Date: 2026-11-16
-Status: selected interaction; detailed design and architecture proposals prepared; not implemented
+Status: selected interaction implemented in source; real acceptance gates pending
 Owners: design and engineering leads
 
 ## Outcome

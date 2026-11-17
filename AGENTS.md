@@ -5,7 +5,7 @@
 - Research material design/architecture choices; present 2–3 concrete options and recommend one. Do not require the user to design from scratch.
 - The selected Google Drive interaction is + New → File upload. Do not reopen this choice without evidence.
 - Keep runtime local and free. Do not enable cloud deployment, tunnels, external application storage, paid services, or paid CI by default.
-- GitHub is for version control and engineering specifications. Figma Design and FigJam are the selected visual workspace; personal Google Drive retains archives and periodic exports. Figma setup remains pending until connection, free capabilities, and actual file creation are verified. Preserve private access.
+- GitHub is for version control and engineering specifications. Figma Design and FigJam are the selected visual workspace; personal Google Drive retains archives and periodic exports. The existing student plan supports the current workspace; creation, spec editing, and FigJam diagram editing were verified. Do not assume future beta features or ongoing access are permanently free. Preserve private access.
 - Keep technical contracts, decisions, migration scripts, and tests versioned with code; link to exact reviewed design revisions.
 - Never commit credentials, uploaded files, runtime data, database dumps, or design exports. Keep persistent data outside the Git working tree.
 - Report proposed, implemented, and verified states accurately. Never claim zero defects or production readiness without evidence.

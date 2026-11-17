@@ -1,7 +1,7 @@
 # ADR 0002: Figma visual workspace
 
 Date: 2026-11-16
-Status: accepted by user; execution pending Figma connection and free-access verification
+Status: accepted; workspace created and current read/write operations verified
 Owners: design and engineering leads
 Supersedes: ADR 0001's selection of Google Drive as the primary design workspace
 
@@ -19,11 +19,14 @@ Do not migrate or remove existing Drive artifacts before new Figma artifacts can
 
 ## Execution status
 
-- Figma plugin installation is now confirmed by plugin discovery.
-- Figma tools are not available in the current conversation; account authorization and file access cannot yet be verified.
-- Account/plan eligibility, read/write capabilities, and file creation remain unverified.
-- No Figma or FigJam files have been created.
-- No existing Drive artifacts have been moved or deleted.
+- Account verified: Devin Torres, devintor@usc.edu, Full seat on the existing student plan, Devin Torres's team.
+- Created both files in drafts. No paid plan, subscription change, or paid feature purchase was performed.
+- Design file: klWl6EK6EdRbKDtcwN7VIl; accepted brief added as native spec 2:2 and content read back successfully.
+- FigJam file: w2beScsVpURt5pnTR6SEFw; first-upload flow created as editable shapes/connectors, scope notes added as native spec 2:71, content read back and diagram visually verified.
+- Flow section 2:70 contains 13 shapes and 14 connectors. Main path is accepted; detailed recovery behavior remains proposed.
+- Figma task session: b6d3083a-99b4-4b88-b43b-2548b10dfb9e. Reuse for follow-up setup checks.
+- Existing Google Drive baseline is retained as historical context; nothing was deleted or moved.
+- Detailed mockups, prototype, architecture proposals, and application implementation are pending.
 
 ## Initial organization
 
@@ -37,4 +40,4 @@ Organize with sections inside these two files and avoid unnecessary additional f
 - https://help.figma.com/hc/en-us/articles/13838684089751-Starter-plan-overview
 - https://developers.figma.com/docs/figma-mcp-server/write-to-canvas/
 
-Starter's file allowance fits this initial organization. Direct agent canvas editing has plan/access conditions and beta pricing limitations; the account-level free workflow still requires verification.
+The account is on a student plan, not Starter. Creation and the read/write operations needed for this setup succeeded on its existing Full seat. Direct agent editing has beta/access conditions; these successful operations do not establish permanent free availability. Recheck entitlement before relying on new or changed capabilities.

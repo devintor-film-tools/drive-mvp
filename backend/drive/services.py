@@ -9,7 +9,7 @@ from django.db import DatabaseError, transaction
 from django.utils import timezone
 
 from .errors import ApiError
-from .models import File, StorageAccount, Upload, UploadAttempt
+from .models import Folder, File, StorageAccount, Upload, UploadAttempt
 from .storage import LocalBlobStore
 
 logger = logging.getLogger("drive")
@@ -88,6 +88,54 @@ def validate_metadata(data):
     return name, size, key
 
 
+def owned_folder(user, value):
+    if value is None:
+        return None
+    try:
+        folder_id = uuid.UUID(str(value))
+    except (ValueError, AttributeError):
+        raise ApiError("invalid_folder", "Choose a folder from your drive.") from None
+    try:
+        return Folder.objects.get(id=folder_id, owner=user)
+    except Folder.DoesNotExist:
+        raise ApiError("folder_not_found", "This folder is no longer available.", 404) from None
+
+
+def folder_path(folder):
+    path = []
+    seen = set()
+    while folder:
+        if folder.id in seen or len(path) >= 32:
+            raise ApiError("folder_depth", "Folders can be nested up to 32 levels.", 409)
+        seen.add(folder.id)
+        path.append(folder)
+        folder = folder.parent
+    return list(reversed(path))
+
+
+def create_folder(user, data):
+    if set(data) != {"name", "parent_id", "client_key"}:
+        raise ApiError("invalid_metadata", "Provide a name and parent folder.")
+    name = validate_name(data["name"])
+    try:
+        key = uuid.UUID(str(data["client_key"]))
+    except (ValueError, AttributeError):
+        raise ApiError("invalid_key", "The request needs a valid identifier.") from None
+    parent = owned_folder(user, data["parent_id"])
+    if len(folder_path(parent)) >= 32:
+        raise ApiError("folder_depth", "Folders can be nested up to 32 levels.", 409)
+    with transaction.atomic():
+        locked_account(user)  # Serializes sibling-name and idempotency checks.
+        existing = Folder.objects.filter(owner=user, client_key=key).first()
+        if existing:
+            if existing.name != name or existing.parent_id != (parent.id if parent else None):
+                raise ApiError("folder_request_changed", "Retry the original folder name or start a new request.", 409)
+            return existing, False
+        if Folder.objects.filter(owner=user, parent=parent, name=name).exists():
+            raise ApiError("folder_name_exists", "A folder with this name already exists here.", 409)
+        return Folder.objects.create(owner=user, parent=parent, name=name, client_key=key), True
+
+
 def reserve(account, size):
     if account.used_bytes + account.reserved_bytes + size > account.quota_bytes:
         raise ApiError("quota_exceeded", "Your storage limit has been reached.", 507)
@@ -97,20 +145,21 @@ def reserve(account, size):
 
 def create_upload(user, data):
     name, size, key = validate_metadata(data)
+    folder = owned_folder(user, data.get("folder_id"))
     now = timezone.now()
     with transaction.atomic():
         account = locked_account(user)
         reconcile_locked(account, now)
         existing = Upload.objects.filter(owner=user, client_key=key).first()
         if existing:
-            if existing.display_name != name or existing.expected_bytes != size:
+            if existing.display_name != name or existing.expected_bytes != size or existing.folder_id != (folder.id if folder else None):
                 raise ApiError("idempotency_mismatch", "This request identifier belongs to a different file.", 409)
             return existing, False
         active = Upload.objects.filter(owner=user, state__in=Upload.ACTIVE).first()
         if active:
             raise ApiError("upload_active", "Finish the active upload before starting another.", 409, upload_id=str(active.id))
         reserve(account, size)
-        upload = Upload.objects.create(owner=user, client_key=key, display_name=name, expected_bytes=size, lease_until=lease_deadline(now), expires_at=session_deadline(now))
+        upload = Upload.objects.create(owner=user, folder=folder, client_key=key, display_name=name, expected_bytes=size, lease_until=lease_deadline(now), expires_at=session_deadline(now))
         return upload, True
 
 
@@ -197,7 +246,7 @@ def finalize(user, upload_id, attempt, total, checksum):
         assert_current(upload, attempt, timezone.now())
         if upload.state != Upload.State.VERIFYING or total != upload.expected_bytes:
             raise ApiError("invalid_finalization", "The upload could not be verified.", 409)
-        file = File.objects.create(owner=user, upload=upload, successful_attempt=attempt, display_name=upload.display_name, byte_size=total, sha256=checksum, blob_key=attempt.blob_key)
+        file = File.objects.create(owner=user, folder_id=upload.folder_id, upload=upload, successful_attempt=attempt, display_name=upload.display_name, byte_size=total, sha256=checksum, blob_key=attempt.blob_key)
         account.reserved_bytes -= total
         account.used_bytes += total
         account.save(update_fields=["reserved_bytes", "used_bytes"])

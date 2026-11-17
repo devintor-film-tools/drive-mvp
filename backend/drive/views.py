@@ -20,7 +20,7 @@ from django.utils.dateparse import parse_datetime
 
 from . import services
 from .errors import ApiError
-from .models import File, LoginThrottle, Upload
+from .models import Folder, File, LoginThrottle, Upload
 from .storage import LocalBlobStore
 
 logger = logging.getLogger("drive")
@@ -70,13 +70,13 @@ def serialize_account(account):
 
 
 def serialize_file(file):
-    return {"id": str(file.id), "name": file.display_name, "size_bytes": file.byte_size, "sha256": file.sha256, "created_at": file.created_at.isoformat(), "trashed_at": file.trashed_at.isoformat() if file.trashed_at else None, "revision": file.revision}
+    return {"id": str(file.id), "name": file.display_name, "size_bytes": file.byte_size, "sha256": file.sha256, "created_at": file.created_at.isoformat(), "trashed_at": file.trashed_at.isoformat() if file.trashed_at else None, "revision": file.revision, "folder_id": str(file.folder_id) if file.folder_id else None}
 
 
 def serialize_upload(upload):
     file = File.objects.filter(upload=upload).first() if upload.state == Upload.State.COMPLETE else None
     return {
-        "id": str(upload.id), "name": upload.display_name, "state": upload.state,
+        "id": str(upload.id), "folder_id": str(upload.folder_id) if upload.folder_id else None, "folder_name": upload.folder.name if upload.folder_id else "My Drive", "name": upload.display_name, "state": upload.state,
         "error_code": upload.error_code or None,
         "expected_bytes": upload.expected_bytes, "received_bytes": upload.received_bytes,
         "expires_at": upload.expires_at.isoformat(),
@@ -151,11 +151,17 @@ def files(request):
     if location not in ("drive", "trash"):
         raise ApiError("invalid_location", "Choose My Drive or Trash.")
     query = File.objects.filter(owner=request.user, trashed_at__isnull=location == "drive").order_by("-created_at", "-id")
+    folder = services.owned_folder(request.user, request.GET.get("folder_id"))
+    folder_id = str(folder.id) if folder else None
+    if location == "drive":
+        query = query.filter(folder=folder)
+    elif folder:
+        raise ApiError("invalid_location", "Trash includes files from all folders.")
     cursor = request.GET.get("cursor")
     if cursor:
         try:
             decoded = signing.loads(cursor, salt="file-list", max_age=86400)
-            if decoded["owner"] != str(request.user.id) or decoded.get("location", "drive") != location:
+            if decoded["owner"] != str(request.user.id) or decoded.get("location", "drive") != location or decoded.get("folder_id") != folder_id:
                 raise ValueError
             created_at = parse_datetime(decoded["created_at"])
             file_id = uuid.UUID(decoded["id"])
@@ -173,8 +179,42 @@ def files(request):
     if len(items) > limit:
         items = items[:limit]
         last = items[-1]
-        next_cursor = signing.dumps({"owner": str(request.user.id), "location": location, "created_at": last.created_at.isoformat(), "id": str(last.id)}, salt="file-list")
+        next_cursor = signing.dumps({"owner": str(request.user.id), "location": location, "folder_id": folder_id, "created_at": last.created_at.isoformat(), "id": str(last.id)}, salt="file-list")
     return JsonResponse({"items": [serialize_file(file) for file in items], "next_cursor": next_cursor, "storage": serialize_account(services.account_for(request.user))})
+
+
+def serialize_folder(folder):
+    return {"id": str(folder.id), "name": folder.name, "parent_id": str(folder.parent_id) if folder.parent_id else None}
+
+
+@endpoint("GET", "POST")
+def folders(request):
+    if request.method == "POST":
+        folder, created = services.create_folder(request.user, read_json(request))
+        return JsonResponse(serialize_folder(folder), status=201 if created else 200)
+    parent = services.owned_folder(request.user, request.GET.get("parent_id"))
+    parent_id = str(parent.id) if parent else None
+    query = Folder.objects.filter(owner=request.user, parent=parent).order_by("name", "id")
+    cursor = request.GET.get("cursor")
+    if cursor:
+        try:
+            decoded = signing.loads(cursor, salt="folder-list", max_age=86400)
+            if decoded["owner"] != str(request.user.id) or decoded["parent_id"] != parent_id:
+                raise ValueError
+            name, ident = decoded["name"], uuid.UUID(decoded["id"])
+            if not isinstance(name, str):
+                raise ValueError
+        except (signing.BadSignature, ValueError, KeyError, TypeError):
+            raise ApiError("invalid_cursor", "Refresh the folder list.") from None
+        query = query.filter(Q(name__gt=name) | Q(name=name, id__gt=ident))
+    items = list(query[:101])
+    next_cursor = None
+    if len(items) > 100:
+        items = items[:100]
+        last = items[-1]
+        next_cursor = signing.dumps({"owner": str(request.user.id), "parent_id": parent_id, "name": last.name, "id": str(last.id)}, salt="folder-list")
+    return JsonResponse({"items": [serialize_folder(f) for f in items], "next_cursor": next_cursor,
+                         "breadcrumbs": [serialize_folder(f) for f in services.folder_path(parent)]})
 
 
 @endpoint("POST")
@@ -211,13 +251,15 @@ def upload_content(request, upload_id):
 @endpoint("PATCH")
 def file_detail(request, file_id):
     data = read_json(request)
-    if set(data) not in ({"name", "revision"}, {"trashed", "revision"}):
+    if set(data) not in ({"name", "revision"}, {"trashed", "revision"}, {"folder_id", "revision"}):
         raise ApiError("invalid_change", "Change one file property at a time.")
     revision = data["revision"]
     if isinstance(revision, bool) or not isinstance(revision, int) or revision < 1:
         raise ApiError("invalid_revision", "Refresh your file list.")
     if "name" in data:
         services.validate_name(data["name"])
+    elif "folder_id" in data:
+        destination = services.owned_folder(request.user, data["folder_id"])
     elif not isinstance(data["trashed"], bool):
         raise ApiError("invalid_change", "Use a boolean trash state.")
     with transaction.atomic():
@@ -232,13 +274,18 @@ def file_detail(request, file_id):
                 raise ApiError("file_trashed", "Restore the file before renaming it.", 409)
             changed = file.display_name != data["name"]
             file.display_name = data["name"]
+        elif "folder_id" in data:
+            if file.trashed_at:
+                raise ApiError("file_trashed", "Restore the file before moving it.", 409)
+            changed = file.folder_id != (destination.id if destination else None)
+            file.folder = destination
         else:
             changed = bool(file.trashed_at) != data["trashed"]
             if changed:
                 file.trashed_at = timezone.now() if data["trashed"] else None
         if changed:
             file.revision += 1
-            file.save(update_fields=["display_name", "trashed_at", "revision"])
+            file.save(update_fields=["display_name", "trashed_at", "revision", "folder"])
         return JsonResponse(serialize_file(file))
 
 

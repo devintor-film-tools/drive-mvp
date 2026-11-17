@@ -23,6 +23,24 @@ class StorageAccount(models.Model):
         )]
 
 
+class Folder(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    parent = models.ForeignKey("self", null=True, blank=True, on_delete=models.PROTECT)
+    name = models.CharField(max_length=255)
+    client_key = models.UUIDField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["id", "owner"], name="folder_id_owner_unique"),
+            models.UniqueConstraint(fields=["owner", "client_key"], name="folder_owner_client_key"),
+            models.UniqueConstraint(fields=["owner", "parent", "name"], nulls_distinct=False, name="folder_sibling_name_unique"),
+            models.CheckConstraint(condition=~Q(id=F("parent_id")), name="folder_not_own_parent"),
+        ]
+        indexes = [models.Index(fields=["owner", "parent", "name", "id"], name="folder_children_idx")]
+
+
 class Upload(models.Model):
     class State(models.TextChoices):
         CREATED = "CREATED"
@@ -35,6 +53,7 @@ class Upload(models.Model):
     ACTIVE = (State.CREATED, State.RECEIVING, State.VERIFYING)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    folder = models.ForeignKey(Folder, null=True, blank=True, on_delete=models.PROTECT)
     client_key = models.UUIDField()
     display_name = models.CharField(max_length=255)
     expected_bytes = models.PositiveBigIntegerField()
@@ -83,6 +102,7 @@ class UploadAttempt(models.Model):
 
 
 class File(models.Model):
+    folder = models.ForeignKey(Folder, null=True, blank=True, on_delete=models.PROTECT)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     upload = models.OneToOneField(Upload, on_delete=models.PROTECT, related_name="file")

@@ -4,6 +4,7 @@ from drive import views
 
 urlpatterns = [
     path("api/session", views.session),
+    path("api/folders", views.folders),
     path("api/files", views.files),
     path("api/files/<uuid:file_id>", views.file_detail),
     path("api/files/<uuid:file_id>/content", views.download),

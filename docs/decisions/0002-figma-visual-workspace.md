@@ -19,8 +19,8 @@ Do not migrate or remove existing Drive artifacts before new Figma artifacts can
 
 ## Execution status
 
-- Figma plugin discovered, not connected at the time of this decision.
-- Installation/connection requested through the available integration flow.
+- Figma plugin installation is now confirmed by plugin discovery.
+- Figma tools are not available in the current conversation; account authorization and file access cannot yet be verified.
 - Account/plan eligibility, read/write capabilities, and file creation remain unverified.
 - No Figma or FigJam files have been created.
 - No existing Drive artifacts have been moved or deleted.

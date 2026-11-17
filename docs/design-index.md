@@ -3,7 +3,7 @@
 Date: 2026-11-16
 Owner: design lead
 
-Figma Design and FigJam are the selected visual workspace under [ADR 0002](decisions/0002-figma-visual-workspace.md). Setup is pending: the plugin is not connected, free editing capabilities are unverified, and no Figma files exist yet.
+Figma Design and FigJam are the selected visual workspace under [ADR 0002](decisions/0002-figma-visual-workspace.md). Setup is pending: plugin installation is confirmed, but its tools are unavailable in the current conversation; account access and free editing capabilities are unverified, and no Figma files have been created for this project.
 
 ## Planned visual files
 

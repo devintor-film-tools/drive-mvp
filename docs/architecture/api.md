@@ -29,3 +29,7 @@ On unknown PUT outcome, GET status before retransmission. COMPLETE returns its e
 Post-refresh the browser fetches active status, then files. A browser cannot promise access to the previously selected local file after refresh; require reselection for retry and verify name/size against the session before accepting it. Failure after session expiry requires sign-in and reconciliation before any retry. Retain only opaque upload IDs in browser storage, never credentials or file bytes.
 
 API authentication needs an ordinary local sign-in screen for the seeded user. This is an implementation prerequisite; the detailed prototype starts in an already authenticated workspace. No external identity provider or email service is required.
+
+## File-actions extension — 2026-11-17
+
+File serialization now includes `trashed_at` and `revision`. File listing defaults to active files; `location=trash` selects retained trash. `PATCH /api/files/:id` applies a single name or trash-state change with a required current revision. Direct downloads are restricted to active owned files. See the complete [revision 3 contract](../workflows/file-actions.md#technical-contract), including stale revision errors and quota semantics.

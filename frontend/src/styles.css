@@ -126,3 +126,28 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 4px; }
   .entry-card { padding: 24px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+
+.sidebar nav { display: flex; flex-direction: column; gap: 8px; }
+.sidebar nav button { width: 100%; text-align: left; color: var(--text); }
+.plain-nav { min-height: 40px; padding: 8px 16px; border-radius: 12px; background: transparent; }
+.plain-nav:hover { background: var(--subtle); }
+th:first-child { width: auto; }
+.actions-column { width: 96px; text-align: right; }
+.file-actions { position: relative; }
+.file-menu { position: absolute; z-index: 5; top: 44px; right: 0; width: 208px; padding: 8px 0; background: var(--surface); box-shadow: var(--elevation); border-radius: 8px; text-align: left; }
+.file-menu button { display: block; width: 100%; min-height: 48px; padding: 12px 16px; background: transparent; color: var(--text); text-align: left; }
+.file-menu button:hover, .file-menu button:focus { background: var(--subtle); outline-offset: -3px; }
+.rename-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 24px; border: 0; border-radius: 16px; box-shadow: var(--elevation); background: var(--surface); color: var(--text); text-align: left; }
+.rename-dialog::backdrop { background: #0006; }
+.rename-dialog form { display: flex; flex-direction: column; gap: 16px; }
+.rename-dialog h2 { font-size: 24px; line-height: 32px; }
+.rename-dialog input { width: 100%; min-height: 48px; border: 1px solid var(--muted); border-radius: 4px; padding: 12px; }
+.dialog-buttons { display: flex; gap: 12px; justify-content: flex-end; }
+@media (max-width: 600px) { .actions-column { width: 80px; } .sidebar nav { flex-direction: row; } .sidebar nav button { width: auto; } }
+
+@media (max-width: 650px) {
+  .sidebar nav { flex-direction: row; margin: 8px 120px 8px 16px; min-height: 44px; }
+  .sidebar nav button { display: flex; width: auto; white-space: nowrap; }
+  .new-control { top: 72px; }
+  .drive-content > h1 { padding-right: 0; }
+}

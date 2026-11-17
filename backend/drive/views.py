@@ -70,7 +70,7 @@ def serialize_account(account):
 
 
 def serialize_file(file):
-    return {"id": str(file.id), "name": file.display_name, "size_bytes": file.byte_size, "sha256": file.sha256, "created_at": file.created_at.isoformat()}
+    return {"id": str(file.id), "name": file.display_name, "size_bytes": file.byte_size, "sha256": file.sha256, "created_at": file.created_at.isoformat(), "trashed_at": file.trashed_at.isoformat() if file.trashed_at else None, "revision": file.revision}
 
 
 def serialize_upload(upload):
@@ -147,12 +147,15 @@ def session(request):
 
 @endpoint("GET")
 def files(request):
-    query = File.objects.filter(owner=request.user).order_by("-created_at", "-id")
+    location = request.GET.get("location", "drive")
+    if location not in ("drive", "trash"):
+        raise ApiError("invalid_location", "Choose My Drive or Trash.")
+    query = File.objects.filter(owner=request.user, trashed_at__isnull=location == "drive").order_by("-created_at", "-id")
     cursor = request.GET.get("cursor")
     if cursor:
         try:
             decoded = signing.loads(cursor, salt="file-list", max_age=86400)
-            if decoded["owner"] != str(request.user.id):
+            if decoded["owner"] != str(request.user.id) or decoded.get("location", "drive") != location:
                 raise ValueError
             created_at = parse_datetime(decoded["created_at"])
             file_id = uuid.UUID(decoded["id"])
@@ -170,7 +173,7 @@ def files(request):
     if len(items) > limit:
         items = items[:limit]
         last = items[-1]
-        next_cursor = signing.dumps({"owner": str(request.user.id), "created_at": last.created_at.isoformat(), "id": str(last.id)}, salt="file-list")
+        next_cursor = signing.dumps({"owner": str(request.user.id), "location": location, "created_at": last.created_at.isoformat(), "id": str(last.id)}, salt="file-list")
     return JsonResponse({"items": [serialize_file(file) for file in items], "next_cursor": next_cursor, "storage": serialize_account(services.account_for(request.user))})
 
 
@@ -205,10 +208,44 @@ def upload_content(request, upload_id):
     return JsonResponse(serialize_upload(upload))
 
 
+@endpoint("PATCH")
+def file_detail(request, file_id):
+    data = read_json(request)
+    if set(data) not in ({"name", "revision"}, {"trashed", "revision"}):
+        raise ApiError("invalid_change", "Change one file property at a time.")
+    revision = data["revision"]
+    if isinstance(revision, bool) or not isinstance(revision, int) or revision < 1:
+        raise ApiError("invalid_revision", "Refresh your file list.")
+    if "name" in data:
+        services.validate_name(data["name"])
+    elif not isinstance(data["trashed"], bool):
+        raise ApiError("invalid_change", "Use a boolean trash state.")
+    with transaction.atomic():
+        try:
+            file = File.objects.select_for_update().get(id=file_id, owner=request.user)
+        except File.DoesNotExist:
+            raise ApiError("not_found", "File not found.", 404) from None
+        if file.revision != revision:
+            raise ApiError("file_changed", "This file changed. Refresh before trying again.", 409)
+        if "name" in data:
+            if file.trashed_at:
+                raise ApiError("file_trashed", "Restore the file before renaming it.", 409)
+            changed = file.display_name != data["name"]
+            file.display_name = data["name"]
+        else:
+            changed = bool(file.trashed_at) != data["trashed"]
+            if changed:
+                file.trashed_at = timezone.now() if data["trashed"] else None
+        if changed:
+            file.revision += 1
+            file.save(update_fields=["display_name", "trashed_at", "revision"])
+        return JsonResponse(serialize_file(file))
+
+
 @endpoint("GET")
 def download(request, file_id):
     try:
-        file = File.objects.get(id=file_id, owner=request.user)
+        file = File.objects.get(id=file_id, owner=request.user, trashed_at__isnull=True)
     except File.DoesNotExist:
         raise ApiError("not_found", "File not found.", 404) from None
     try:

@@ -58,3 +58,9 @@ Pause new writes, drain/reconcile in-flight uploads, create a consistent Postgre
 5. Roll back by pointing to the original snapshot only before destination writes resume. After new writes, reconcile them explicitly; do not pretend an old snapshot is a lossless rollback.
 
 Before any public launch: add production TLS/cookie configuration, credential recovery, monitoring, backup retention and restore targets, abuse/resource controls, deployment rollback and measured load targets. These are launch gates, not extra first-upload product features.
+
+## File-actions upgrade — 2026-11-17
+
+The complete local acceptance suite now passes, including restart and backup/restore; earlier pending/environment statements above are historical. Stop the app, run `.venv/bin/python scripts/local.py manage migrate --noinput`, run `npm --prefix frontend run build`, then open `Start Drive.command`. Migration 0004 adds nullable trash timestamps and revision counters without moving or deleting uploaded contents. Backups retain active and trashed files.
+
+The app port comes from `app_port` in the private external `local.json` (default 8000). If another service owns that port, choose an available local port in that configuration while Drive is stopped. A 200 response at `/` is insufficient readiness evidence: verify `/api/health` returns Drive's `{"status":"ok"}` and `/` returns the frontend HTML, not another service's health JSON.

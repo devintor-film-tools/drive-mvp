@@ -1,7 +1,20 @@
 # First-workflow verification
 
-Status: design artifact, static build and selected unit checks executed; real application verification pending
+Status: local automated acceptance passes; human usability and screen-reader review pending
 Owner: engineering lead, with design review
+
+## File-actions acceptance — 2026-11-17
+
+The original upload gate passed in `run-ro484rat` before feature implementation. The expanded suite passed in `run-r7_t4ebg` and the final rerun `run-13alt54i` under `~/Library/Application Support/Drive MVP Verification/` (report and logs retained privately outside Git). This supersedes the earlier runtime-blocked notes below; they remain historical evidence.
+
+- PASS: four frontend recovery tests and production TypeScript/Vite build; ten backup integrity unit tests.
+- PASS: migration drift check and 23 Django/PostgreSQL tests, including owner isolation, CSRF, invalid names, unchanged identity/content/quota, stale revisions and trash/restore.
+- PASS: 82 HTTP acceptance assertions and seven real Chromium browser tests. New browser coverage verifies exact download bytes/name, keyboard menu/dialog operation, rename, trash/reload/restore, narrow layout, invalid names, download failure, stale-tab conflicts and a committed trash update with a lost response.
+- PASS: application/database restart and backup/isolated restore. Ten files, including a retained trashed fixture, preserve metadata across both; backup verification checks all committed blob bytes.
+- REVIEWED: desktop rename and narrow navigation browser screenshots; editable R3 Figma action/rename/trash compositions. These are not a pixel-exact or accessibility conformance claim.
+- NOT RUN: human usability, screen-reader review, multi-browser acceptance, power-loss testing.
+
+The pre-commit review rerun `run-sf0lppmv` also passes the full suite. Desktop rename and narrow Trash screenshots were reviewed again. The run reports record the base Git revision and dirty-tree state before the file-actions commit. Test credentials, uploaded fixtures, screenshots and backup data remain outside Git. See [file-actions contract](workflows/file-actions.md).
 
 ## Local setup evidence — 2026-11-17
 
@@ -29,7 +42,9 @@ The normal user account/data directory was not initialized because setup correct
 - Architecture, API, integrity/security and operations specifications are in Git. The statements in this design-artifact subsection describe the preceding design pass; implementation evidence is recorded above.
 - Exact nodes and known fidelity limitations: [design index](design-index.md) and [design specification](design-first-upload.md).
 
-## Application gate — all pending
+## Original application checklist — historical
+
+Automated results above supersede the original unchecked execution status below. Human usability and screen-reader checks remain pending.
 
 - [ ] First-time user discovers New → File upload without coaching.
 - [ ] Menu and picker path works with keyboard; cancellation restores focus.

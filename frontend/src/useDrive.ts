@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { api, ApiError, errorCopy, sendFile } from './api';
+import { api, ApiError, errorCopy, sendFile, downloadFile } from './api';
 import type { DriveFile, FileList, Session, Upload } from './api';
 import { matchesSelection, readToken, recoveryFor, remember } from './recovery';
 
@@ -8,6 +8,13 @@ export interface Panel { phase: Phase; name: string; sent: number; size: number;
 const idle: Panel = { phase: 'idle', name: '', sent: 0, size: 0 };
 
 export function useDrive() {
+  const [location, setLocation] = useState<'drive' | 'trash'>('drive');
+  const locationRef = useRef<'drive' | 'trash'>('drive');
+  const listRequest = useRef(0);
+  const actionLock = useRef(false);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionMessage, setActionMessage] = useState('');
+  const [actionError, setActionError] = useState('');
   const [session, setSession] = useState<Session | null>(null);
   const [authState, setAuthState] = useState<'loading' | 'signed-out' | 'ready' | 'unavailable'>('loading');
   const [authError, setAuthError] = useState('');
@@ -30,6 +37,8 @@ export function useDrive() {
     locked.current = false;
     setSession(null);
     setFiles([]);
+    setActionMessage('');
+    setActionError('');
     setPanel(idle);
     setAuthState('signed-out');
     setAuthError('Your session ended. Sign in to continue.');
@@ -37,10 +46,11 @@ export function useDrive() {
 
   const loadFiles = useCallback(async (next?: string) => {
     const epoch = identityEpoch.current;
+    const request = ++listRequest.current;
     if (!next) setListState('loading'); else setLoadingMore(true);
     try {
-      const result = await api<FileList>(`/files${next ? `?cursor=${encodeURIComponent(next)}` : ''}`);
-      if (epoch !== identityEpoch.current) return;
+      const result = await api<FileList>(`/files?location=${locationRef.current}${next ? `&cursor=${encodeURIComponent(next)}` : ''}`);
+      if (epoch !== identityEpoch.current || request !== listRequest.current) return;
       setFiles((previous) => next ? [...previous, ...result.items.filter((file) => !previous.some((old) => old.id === file.id))] : result.items);
       setCursor(result.next_cursor);
       setListState('ready');
@@ -49,10 +59,10 @@ export function useDrive() {
         setSession(current.current);
       }
     } catch (error) {
-      if (epoch !== identityEpoch.current) return;
+      if (epoch !== identityEpoch.current || request !== listRequest.current) return;
       if (error instanceof ApiError && error.status === 401) expireSession();
       else setListState('error');
-    } finally { if (epoch === identityEpoch.current) setLoadingMore(false); }
+    } finally { if (epoch === identityEpoch.current && request === listRequest.current) setLoadingMore(false); }
   }, []);
 
   function applyUpload(upload: Upload) {
@@ -103,6 +113,8 @@ export function useDrive() {
     picked.current = null;
     setSession(loaded);
     setFiles([]);
+    setActionMessage('');
+    setActionError('');
     setPanel(idle);
     setAuthError('');
     setAuthState('ready');
@@ -263,6 +275,44 @@ export function useDrive() {
     return true;
   }
 
-  const busy = ['creating', 'uploading', 'finishing', 'waiting', 'unknown'].includes(panel.phase);
-  return { session, authState, authError, files, listState, cursor, loadingMore, panel, busy, signIn, signOut, initialize, loadFiles, selectFile, checkAgain, retryHeldFile, dismiss: () => setPanel(idle) };
+  function changeLocation(value: 'drive' | 'trash') {
+    locationRef.current = value;
+    setLocation(value);
+    setFiles([]);
+    setCursor(null);
+    setActionMessage(''); setActionError('');
+    void loadFiles();
+  }
+
+  async function fileAction(file: DriveFile, action: 'download' | 'rename' | 'trash' | 'restore', name?: string): Promise<boolean> {
+    if (actionLock.current) return false;
+    actionLock.current = true; setActionBusy(true);
+    setActionMessage(''); setActionError('');
+    const epoch = identityEpoch.current;
+    try {
+      if (action === 'download') {
+        setActionMessage('Preparing download…');
+        await downloadFile(file);
+        if (epoch === identityEpoch.current) setActionMessage('Download sent to your browser. Check your downloads.');
+      } else {
+        await api<DriveFile>(`/files/${file.id}`, 'PATCH', { revision: file.revision, ...(action === 'rename' ? { name } : { trashed: action === 'trash' }) });
+        if (epoch !== identityEpoch.current) return false;
+        setActionMessage(action === 'rename' ? 'File renamed.' : action === 'trash' ? 'File moved to Trash. You can restore it from Trash.' : 'File restored to My Drive.');
+        await loadFiles();
+      }
+      return epoch === identityEpoch.current;
+    } catch (error) {
+      if (epoch !== identityEpoch.current) return false;
+      setActionMessage('');
+      if (error instanceof ApiError && error.status === 401) expireSession();
+      else {
+        const message = error instanceof ApiError ? errorCopy(error) : 'We couldn’t confirm the action. Refresh the list to check before trying again.';
+        setActionError(message);
+      }
+      return false;
+    } finally { actionLock.current = false; setActionBusy(false); }
+  }
+
+  const busy = actionBusy || ['creating', 'uploading', 'finishing', 'waiting', 'unknown'].includes(panel.phase);
+  return { location, changeLocation, actionBusy, actionMessage, actionError, fileAction, session, authState, authError, files, listState, cursor, loadingMore, panel, busy, signIn, signOut, initialize, loadFiles, selectFile, checkAgain, retryHeldFile, dismiss: () => setPanel(idle) };
 }

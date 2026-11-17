@@ -59,11 +59,7 @@ def reconcile_user(user):
         return reconcile_locked(account, timezone.now())
 
 
-def validate_metadata(data):
-    if not isinstance(data, dict):
-        raise ApiError("invalid_metadata", "Choose one file to upload.")
-    name = data.get("name")
-    size = data.get("size_bytes")
+def validate_name(name):
     try:
         valid_name = isinstance(name, str) and bool(name.strip()) and len(name.encode("utf-8")) <= 255
     except UnicodeEncodeError:
@@ -72,6 +68,15 @@ def validate_metadata(data):
         raise ApiError("invalid_name", "Use a file name between 1 and 255 UTF-8 bytes.")
     if any(ord(char) < 32 or ord(char) == 127 for char in name) or "/" in name or "\\" in name or not name.strip(". "):
         raise ApiError("invalid_name", "This file name is not supported.")
+    return name
+
+
+def validate_metadata(data):
+    if not isinstance(data, dict):
+        raise ApiError("invalid_metadata", "Choose one file to upload.")
+    name = data.get("name")
+    size = data.get("size_bytes")
+    validate_name(name)
     if isinstance(size, bool) or not isinstance(size, int) or size <= 0:
         raise ApiError("invalid_size", "Choose a file that is not empty.")
     if size > settings.MAX_FILE_BYTES:

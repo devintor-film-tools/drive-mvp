@@ -93,6 +93,9 @@ class File(models.Model):
     blob_key = models.CharField(max_length=40, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    trashed_at = models.DateTimeField(null=True, blank=True)
+    revision = models.PositiveBigIntegerField(default=1)
+
     class Meta:
         ordering = ["-created_at", "-id"]
         indexes = [models.Index(fields=["owner", "-created_at", "-id"], name="file_owner_recent_idx")]

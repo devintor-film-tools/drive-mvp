@@ -1,7 +1,7 @@
 export interface User { id: string; username: string; display_name: string }
 export interface Storage { used_bytes: number; reserved_bytes: number; quota_bytes: number }
 export interface Session { user: User; storage: Storage; limits: { max_file_bytes: number }; csrf_token: string }
-export interface DriveFile { id: string; name: string; size_bytes: number; sha256: string; created_at: string }
+export interface DriveFile { id: string; name: string; size_bytes: number; sha256: string; created_at: string; trashed_at: string | null; revision: number }
 export interface Upload {
   id: string;
   name: string;
@@ -70,6 +70,10 @@ export function sendFile(id: string, file: File, onProgress: (loaded: number) =>
 export function errorCopy(error: unknown): string {
   if (!(error instanceof ApiError)) return 'We couldn’t reach your drive. Please try again.';
   switch (error.code.toLowerCase()) {
+    case 'file_changed': return 'This file changed in another tab. Refresh the list before trying again.';
+    case 'file_trashed': return 'This file is in Trash. Restore it before renaming or downloading.';
+    case 'not_found': return 'This file is no longer available here. Refresh the list.';
+    case 'file_unavailable': return 'The file couldn’t be downloaded. Please try again.';
     case 'quota_exceeded': case 'quota_full': return 'Storage limit reached. Choose a smaller file.';
     case 'disk_full': case 'device_full': case 'storage_full': return 'This device is out of space. Free some space, then try again.';
     case 'invalid_credentials': return 'The username or password is incorrect.';
@@ -86,4 +90,27 @@ export function errorCopy(error: unknown): string {
       if (error.status === 400 || error.status === 422) return 'This file couldn’t be accepted. Check the file and try again.';
       return 'We couldn’t reach your drive. Please try again.';
   }
+}
+
+export async function downloadFile(file: DriveFile): Promise<void> {
+  const response = await fetch(`/api/files/${encodeURIComponent(file.id)}/content`, { credentials: 'same-origin', cache: 'no-store' });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new ApiError(response.status, body?.error?.code ?? 'file_unavailable');
+  }
+  const blob = await response.blob();
+  if (blob.size !== file.size_bytes) throw new ApiError(503, 'file_unavailable');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  // Prefer the server's current filename if another tab has renamed the file.
+  const disposition = response.headers.get('Content-Disposition') ?? '';
+  const encoded = disposition.match(/filename\*=utf-8''([^;]+)/i);
+  const quoted = disposition.match(/filename="((?:[^"\\]|\\.)*)"/i);
+  let name = file.name;
+  if (encoded) { try { name = decodeURIComponent(encoded[1]); } catch { /* keep known name */ } }
+  else if (quoted) name = quoted[1].replace(/\\(.)/g, '$1');
+  link.download = name;
+  document.body.appendChild(link); link.click(); link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }

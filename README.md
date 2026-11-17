@@ -2,7 +2,7 @@
 
 Working project name. Independent file storage with a Google Drive interaction reference.
 
-Status: first-upload application implemented. The user-run setup passed 18 backend tests, 82 HTTP checks and four real-browser tests, plus the frontend and backup unit checks. Verification stopped at a launcher restart check, now corrected; restart persistence and backup/restore still await a rerun. The coding sandbox itself cannot start local servers. See the dated evidence in the verification checklist.
+Status: local upload, download, rename, trash and restore are implemented. The 2026-11-17 automated suite passes 23 backend tests, 82 HTTP assertions, seven browser tests, frontend/backup unit checks, restart persistence and backup/restore including trash. Human usability and screen-reader review remain pending. See the dated [verification evidence](docs/verification.md).
 
 [Open the clickable first-upload prototype](https://www.figma.com/proto/klWl6EK6EdRbKDtcwN7VIl?node-id=8-2&starting-point-node-id=8%3A2) · [Architecture board](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw)
 
@@ -22,7 +22,7 @@ The setup launcher intentionally stops on a failing gate. It is not a substitute
 
 ## Implemented scope
 
-Local session sign-in; My Drive → New → File upload; native single-file picker; transport progress and separate final confirmation; safe retry/reconciliation; private persistent metadata and blob storage; file limits/quota; failure states; narrow layout. The HTTP download endpoint exists for integrity checks, while the product's next user-facing action remains deferred.
+Local session sign-in; My Drive → New → File upload; native single-file picker; transport progress and separate final confirmation; safe retry/reconciliation; private persistent metadata and blob storage; file limits/quota; failure states; narrow layout. File-row Actions now supports download, rename and move to trash; Trash supports restore. Trashed files retain their contents and still count toward storage. There is no automatic expiry or permanent deletion. See the [file-actions specification](docs/workflows/file-actions.md).
 
 `backend/` contains Django/PostgreSQL models, migrations, storage and APIs. `frontend/` contains the Figma-derived React interface and downloaded local icons/font. `scripts/` manages local services and backup/restore. `tests/` contains independent HTTP/browser acceptance suites. The launcher refuses to start with missing assets.
 
@@ -37,6 +37,7 @@ Local session sign-in; My Drive → New → File upload; native single-file pick
 
 ## Working documents
 
+- [Download, rename, trash and restore](docs/workflows/file-actions.md)
 - [First upload workflow](docs/workflows/first-upload.md)
 - [Engineering foundation](docs/engineering.md)
 - [Three architecture proposals and recommendation](docs/decisions/0003-first-upload-architecture.md)

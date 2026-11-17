@@ -53,19 +53,25 @@ def fingerprint(base, username, password):
     with browser.open(urllib.request.Request(base + "/api/session", data=body,
             headers={"Content-Type": "application/json", "X-CSRFToken": payload["csrf_token"]}), timeout=10):
         pass
-    records, cursor = [], None
-    while True:
-        url = base + "/api/files" + ("?cursor=" + urllib.parse.quote(cursor) if cursor else "")
-        with browser.open(url, timeout=10) as response:
-            page = json.load(response)
-        for item in page["items"]:
-            with browser.open(base + "/api/files/" + item["id"] + "/content", timeout=10) as response:
-                actual = response.read()
-            assert len(actual) == item["size_bytes"] and hashlib.sha256(actual).hexdigest() == item["sha256"], "Persisted file integrity mismatch"
-            records.append(item)
-        cursor = page["next_cursor"]
-        if not cursor:
-            return sorted(records, key=lambda row: row["id"])
+    records = []
+    for location in ("drive", "trash"):
+        cursor = None
+        while True:
+            url = base + "/api/files?location=" + location + ("&cursor=" + urllib.parse.quote(cursor) if cursor else "")
+            with browser.open(url, timeout=10) as response:
+                page = json.load(response)
+            for item in page["items"]:
+                if location == "drive":
+                    with browser.open(base + "/api/files/" + item["id"] + "/content", timeout=10) as response:
+                        actual = response.read()
+                    assert len(actual) == item["size_bytes"] and hashlib.sha256(actual).hexdigest() == item["sha256"], "Persisted file integrity mismatch"
+                else:
+                    assert item["trashed_at"], "Trash list contains an active file"
+                records.append(item)
+            cursor = page["next_cursor"]
+            if not cursor:
+                break
+    return sorted(records, key=lambda row: row["id"])
 
 
 def main():
@@ -168,6 +174,7 @@ def main():
         stage = "restart persistence"
         before = {suffix: fingerprint(env["DRIVE_TEST_BASE_URL"], env[f"DRIVE_TEST_USER_{suffix}"], env[f"DRIVE_TEST_PASSWORD_{suffix}"]) for suffix in ("A", "B")}
         assert before["A"] and before["B"], "Acceptance did not create both fixtures"
+        assert any(item["trashed_at"] for item in before["B"]), "No trashed fixture to verify"
         stop_app()
         execute([local.PYTHON, "scripts/local.py", "stop-db"], env)
         start_app(env, app_port)

@@ -1,7 +1,7 @@
 # First-upload implementation review
 
 Date: 2026-11-16 · Owner: independent quality/security review
-Status: implementation and static review in progress; runtime acceptance blocked by environment permissions
+Status: original review retained below; local automated acceptance now passes (2026-11-17). See [current evidence](verification.md) and [file-actions extension](workflows/file-actions.md). Human review remains pending.
 
 ## Review scope
 

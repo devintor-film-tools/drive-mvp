@@ -11,7 +11,7 @@ describe('uncertain upload recovery', () => {
   });
   it('requires a final File before announcing completion', () => {
     expect(recoveryFor({ ...pending, state: 'COMPLETE' }, true)).toBe('wait');
-    expect(recoveryFor({ ...pending, state: 'COMPLETE', file: { id: 'file', name: 'notes.txt', size_bytes: 16, sha256: 'hash', created_at: '' } }, false)).toBe('complete');
+    expect(recoveryFor({ ...pending, state: 'COMPLETE', file: { id: 'file', name: 'notes.txt', size_bytes: 16, sha256: 'hash', created_at: '', trashed_at: null, revision: 1 } }, false)).toBe('complete');
   });
   it('requires reselection after reload, while allowing a held file to retry', () => {
     expect(recoveryFor({ ...pending, state: 'RETRYABLE' }, false)).toBe('reselect');

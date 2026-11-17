@@ -3,7 +3,7 @@
 Date: 2026-11-16
 Owner: design lead
 
-Implementation update: React screens now implement the selected interaction, local sign-in and failure recovery. Source lives in `frontend/`; browser comparison to the reviewed Figma frames remains blocked by missing asset downloads and sandbox server restrictions. Live Figma nodes remain the design targets, not evidence that the running application matches them. See [verification](verification.md).
+Implementation update (2026-11-17): React implements upload and R3 file actions. Local browser acceptance and representative screenshot review pass; see [verification](verification.md). Live Figma nodes remain editable visual references, not immutable revisions or a pixel-exact claim.
 
 Figma Design and FigJam are the canonical visual workspace under [ADR 0002](decisions/0002-figma-visual-workspace.md). File creation, native spec read/write, and FigJam diagram editing are verified on the existing student plan. No subscription changes were made.
 
@@ -13,6 +13,16 @@ Figma Design and FigJam are the canonical visual workspace under [ADR 0002](deci
 | --- | --- | --- |
 | [Drive MVP — Design](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl) | Fourteen editable frames, seven prototype flows, shared components/variables, native interaction specification | Detailed proposal prepared; representative visual checks; runtime/usability validation pending |
 | [Drive MVP — Flows & Architecture](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw) | First-upload flow; system, ownership, lifecycle and finalization diagrams; three architecture proposals | Proposed architecture, visually reviewed; not implemented or load-tested |
+
+### Revision 3 references — 2026-11-17
+
+Download, rename, and trash/restore were authorized together. Three editable compositions extend the existing file; original R2 screens remain intact:
+
+- [File actions](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl?node-id=19-2743)
+- [Rename dialog](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl?node-id=19-2844)
+- [Trash and restore](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl?node-id=19-2909)
+
+Agent-reviewed compositions, implemented in React with automated browser checks; user design review remains pending. Roboto typography and editable hierarchy were checked; no image-filled UI nodes were present. Exact dated live-node references are recorded, but immutable Figma version snapshots are not available here. No pixel-exact claim: the browser uses a native dialog and standard label/input presentation. Technical behavior and researched alternatives: [R3 specification](workflows/file-actions.md).
 
 ### Revision 2 references — 2026-11-16
 

@@ -1,7 +1,7 @@
 # First private file upload
 
 Date: 2026-11-16
-Status: selected interaction; detailed specification pending
+Status: selected interaction; detailed design and architecture proposals prepared; not implemented
 Owners: design and engineering leads
 
 ## Outcome
@@ -30,8 +30,10 @@ One-user design does not waive isolation testing: use a second fixture identity 
 
 Sharing, public links, folders, previews, search, editors, offline sync, batch uploads, and user-facing version history.
 
-## Next proposals to prepare
+## Prepared proposals and next gate
 
-Engineering owns recommending local authentication, storage/database/runtime choices, file limits, resumability, and finalization protocol. Design owns annotated layouts, error copy, keyboard behavior, and prototype validation. Bring concrete researched recommendations rather than asking the user to invent these decisions.
+Engineering recommends proposal A in [ADR 0003](../decisions/0003-first-upload-architecture.md), with two researched alternatives. The [interaction specification](../design-first-upload.md) covers layouts, copy, focus and status semantics; the [protocol](../architecture/first-upload.md) and [API](../architecture/api.md) define retries, limits and finalization.
+
+Before declaring this outcome ready, implement and verify its authenticated end-to-end path and fault cases. Complete the prerequisite sign-in and resource-limit layouts with that implementation. Do not start a second product outcome merely because the happy path works.
 
 See [design index](../design-index.md) and [verification](../verification.md).

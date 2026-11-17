@@ -9,10 +9,23 @@ Figma Design and FigJam are the canonical visual workspace under [ADR 0002](deci
 
 | File | Current contents | Status |
 | --- | --- | --- |
-| [Drive MVP — Design](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl) | Accepted brief, references, first-upload requirements; pages reserved for screens and components/validation | Created and brief verified; mockups/prototype pending |
-| [Drive MVP — Flows & Architecture](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw) | Editable first-upload flow with cancellation/recovery, architecture scope notes, cross-links | Created and visually checked; technical architecture pending |
+| [Drive MVP — Design](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl) | Fourteen editable frames, seven prototype flows, shared components/variables, native interaction specification | Detailed proposal prepared; representative visual checks; runtime/usability validation pending |
+| [Drive MVP — Flows & Architecture](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw) | First-upload flow; system, ownership, lifecycle and finalization diagrams; three architecture proposals | Proposed architecture, visually reviewed; not implemented or load-tested |
 
-### Revision 1 references
+### Revision 2 references — 2026-11-16
+
+These are live node references, not immutable Figma version snapshots. No implementation commit exists yet.
+
+- [Open the first-upload prototype](https://www.figma.com/proto/klWl6EK6EdRbKDtcwN7VIl?node-id=8-2&starting-point-node-id=8%3A2)
+- [Screen workspace](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl?node-id=2-67): empty 8:2; menu 8:28; picker handoff 8:257; uploading 8:300; finishing 8:361; complete 8:395; interrupted 8:444; list unavailable 8:487; size limit 8:518; narrow 8:561; dismissed completion 10:202; uncertain outcome 12:321; reselect 12:341; loading 12:399.
+- [Native interaction specification](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl?node-id=13-253); technical counterpart [design-first-upload.md](design-first-upload.md).
+- [Components and foundations](https://www.figma.com/design/klWl6EK6EdRbKDtcwN7VIl?node-id=2-68): navigation, file row, five upload-status variants, semantic color/spacing/radius variables and typography. Imported Material 3 primitives underpin the composed UI.
+- [System diagram](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw?node-id=9-144), [data model](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw?node-id=9-176), [lifecycle](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw?node-id=9-219), [sequence](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw?node-id=8-70).
+- [Three architecture proposals](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw?node-id=11-222); authoritative technical decision [ADR 0003](decisions/0003-first-upload-architecture.md).
+- Git source diagrams: [system](architecture/system.mmd), [model](architecture/model.mmd), [lifecycle](architecture/lifecycle.mmd), [sequence](architecture/upload-sequence.mmd). FigJam explains the same contracts with native editable layouts.
+- Known limitations: Roboto substitutes for Google Sans; scope is intentionally reduced; no verified pixel-exact claim. Native picker/progress are simulated. Sign-in and resource-limit layouts still need their implementation pass. No real-user or accessibility conformance test has been performed.
+
+### Revision 1 references — retained history
 
 - Design brief: file klWl6EK6EdRbKDtcwN7VIl, native spec node 2:2; accepted direction, detailed design pending.
 - Design pages: 0:1 (brief), 2:67 (first upload), 2:68 (components/validation).

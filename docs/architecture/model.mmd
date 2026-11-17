@@ -1,0 +1,7 @@
+erDiagram
+    User ||--|| StorageAccount : owns
+    User ||--o{ Upload : initiates
+    Upload ||--o{ UploadAttempt : has
+    Upload ||--o| File : produces
+    UploadAttempt ||--o| File : finalizes
+    User ||--o{ File : owns

@@ -1,8 +1,18 @@
 # Engineering foundation
 
 Date: 2026-11-16
-Status: requirements only; implementation architecture not yet selected
+Status: architecture proposal A recommended; application not implemented
 Owner: engineering lead
+
+## Prepared technical package
+
+- [Three architecture proposals and recommendation](decisions/0003-first-upload-architecture.md)
+- [Boundaries, data model, lifecycle, integrity and security](architecture/first-upload.md)
+- [HTTP API and recovery contract](architecture/api.md)
+- [Local setup, backup/restore and migration requirements](architecture/operations.md)
+- [Interface behavior and accessibility specification](design-first-upload.md)
+
+Explanatory system, data model, lifecycle and sequence diagrams are in FigJam; exact nodes are listed in the [design index](design-index.md). These specifications are proposed. Database migrations, executable API schemas and operational scripts will be created and validated with the first implementation.
 
 ## Required artifacts for the first workflow
 

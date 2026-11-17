@@ -1,0 +1,21 @@
+sequenceDiagram
+    title First upload - proposed success sequence
+    participant Browser
+    participant Django
+    participant PostgreSQL
+    participant BlobStore
+    Browser->>Django: POST uploads with client key
+    Django->>PostgreSQL: Authorize and reserve quota
+    PostgreSQL-->>Django: Upload UUID
+    Django-->>Browser: Created upload session
+    Browser->>Django: PUT content with attempt UUID
+    Django->>PostgreSQL: Claim fenced attempt
+    Django->>BlobStore: Stream and hash staging bytes
+    Django->>PostgreSQL: Renew lease while streaming
+    Django->>BlobStore: Verify and publish durably
+    BlobStore-->>Django: Immutable object key
+    Django->>PostgreSQL: Commit File and quota
+    PostgreSQL-->>Django: Committed
+    Django-->>Browser: COMPLETE with File
+    Browser->>Django: GET status if response lost
+    Django-->>Browser: Same saved File

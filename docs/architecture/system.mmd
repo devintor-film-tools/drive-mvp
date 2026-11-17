@@ -1,0 +1,10 @@
+flowchart LR
+    subgraph localMachine["Local machine — proposed"]
+        browser["Browser / React — untrusted inputs"]
+        application["Django — sessions, CSRF, ownership and upload rules"]
+        database["PostgreSQL — identities, metadata, quota and leases"]
+        storage["Private filesystem — staging and immutable blobs"]
+        browser -->|"Same-origin authenticated API"| application
+        application -->|"Short transactions"| database
+        application -->|"BlobStore contract"| storage
+    end

@@ -2,7 +2,9 @@
 
 Working project name. Independent file storage with a Google Drive interaction reference.
 
-Status: documentation scaffold only. No application or local services have been implemented or started.
+Status: detailed first-upload design and architecture proposal prepared. No application or local services have been implemented or started.
+
+[Open the clickable first-upload prototype](https://www.figma.com/proto/klWl6EK6EdRbKDtcwN7VIl?node-id=8-2&starting-point-node-id=8%3A2) · [Architecture board](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw)
 
 ## Accepted constraints
 
@@ -17,6 +19,8 @@ Status: documentation scaffold only. No application or local services have been 
 
 - [First upload workflow](docs/workflows/first-upload.md)
 - [Engineering foundation](docs/engineering.md)
+- [Three architecture proposals and recommendation](docs/decisions/0003-first-upload-architecture.md)
+- [Detailed interaction specification](docs/design-first-upload.md)
 - [Environment and artifact decision](docs/decisions/0001-local-runtime-and-artifact-ownership.md)
 - [Figma visual workspace decision](docs/decisions/0002-figma-visual-workspace.md)
 - [Verification checklist](docs/verification.md)

@@ -1,0 +1,12 @@
+stateDiagram-v2
+    [*] --> CREATED
+    CREATED --> RECEIVING: Start attempt
+    CREATED --> RETRYABLE: Initiation lease expires
+    RECEIVING --> VERIFYING: Exact byte count
+    VERIFYING --> COMPLETE: Durable blob then metadata commit
+    RECEIVING --> RETRYABLE: Confirmed failure or lease expiry
+    VERIFYING --> RETRYABLE: Confirmed failure or lease expiry
+    RETRYABLE --> RECEIVING: Recheck quota and acquire fenced attempt
+    RETRYABLE --> EXPIRED: 24 hours inactive
+    COMPLETE --> [*]
+    EXPIRED --> [*]

@@ -2,7 +2,7 @@
 
 Working project name. Independent file storage with a Google Drive interaction reference.
 
-Status: first-upload application implemented in source; runtime acceptance is pending. Frontend build/unit checks and backup-integrity unit checks pass. This execution environment blocks dependency downloads and local server sockets, so no running-app, database, browser or restore success is claimed.
+Status: first-upload application implemented. The user-run setup passed 18 backend tests, 82 HTTP checks and four real-browser tests, plus the frontend and backup unit checks. Verification stopped at a launcher restart check, now corrected; restart persistence and backup/restore still await a rerun. The coding sandbox itself cannot start local servers. See the dated evidence in the verification checklist.
 
 [Open the clickable first-upload prototype](https://www.figma.com/proto/klWl6EK6EdRbKDtcwN7VIl?node-id=8-2&starting-point-node-id=8%3A2) · [Architecture board](https://www.figma.com/board/w2beScsVpURt5pnTR6SEFw)
 
@@ -24,7 +24,7 @@ The setup launcher intentionally stops on a failing gate. It is not a substitute
 
 Local session sign-in; My Drive → New → File upload; native single-file picker; transport progress and separate final confirmation; safe retry/reconciliation; private persistent metadata and blob storage; file limits/quota; failure states; narrow layout. The HTTP download endpoint exists for integrity checks, while the product's next user-facing action remains deferred.
 
-`backend/` contains Django/PostgreSQL models, migrations, storage and APIs. `frontend/` contains the Figma-derived React interface. `scripts/` manages local services and backup/restore. `tests/` contains independent HTTP/browser acceptance suites. Missing downloaded assets currently prevent a complete visual check; the launcher refuses to start with missing assets.
+`backend/` contains Django/PostgreSQL models, migrations, storage and APIs. `frontend/` contains the Figma-derived React interface and downloaded local icons/font. `scripts/` manages local services and backup/restore. `tests/` contains independent HTTP/browser acceptance suites. The launcher refuses to start with missing assets.
 
 ## Accepted constraints
 

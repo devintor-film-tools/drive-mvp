@@ -3,6 +3,14 @@
 Status: design artifact, static build and selected unit checks executed; real application verification pending
 Owner: engineering lead, with design review
 
+## Local setup evidence — 2026-11-17
+
+The user-run verification at `run-kkx0d79p` installed the dependencies and design assets. Its saved report/log confirms PASS for the frontend build/recovery tests, ten backup tests, PostgreSQL initialization and migration drift, all eighteen backend tests, 82 real HTTP assertions, and four Chromium browser tests. Desktop and narrow screenshots were saved from the actual running application.
+
+The run stopped during restart persistence: the launcher's plain socket bind probe reported a port conflict after a clean stop. Waitress uses SO_REUSEADDR, but the probe did not, so recently closed connections could cause a false conflict. The redundant probe has been removed; the actual server bind/readiness remains authoritative. Setup now reuses installed prerequisites instead of downloading them again when available. This fix passes syntax/static checks; the restart and backup/restore gates still need the corrected user-run verification. The coding sandbox continues to reject socket binding with EPERM.
+
+The normal user account/data directory was not initialized because setup correctly stopped before those remaining gates. No live application URL is claimed yet.
+
 ## Implementation evidence — 2026-11-16
 
 - PASS: React/TypeScript production build; four recovery-policy unit tests.

@@ -11,7 +11,6 @@ from pathlib import Path
 import secrets
 import shutil
 import signal
-import socket
 import subprocess
 import sys
 import time
@@ -208,11 +207,10 @@ def start(args):
     if healthy(config):
         print(f"Already running: http://127.0.0.1:{config['app_port']}")
         return
-    with socket.socket() as sock:
-        try:
-            sock.bind(("127.0.0.1", config["app_port"]))
-        except OSError as error:
-            raise SetupError("App port is occupied by another process; no process was stopped.") from error
+    # Let Waitress bind its own socket. A separate plain bind probe can reject
+    # a recently stopped server's TIME_WAIT connections even though Waitress's
+    # SO_REUSEADDR socket can restart safely. A real listener conflict still
+    # makes the child exit and is reported by the readiness check below.
     manage(config, ["reconcile_uploads"])
     # Keep the launcher attached: Ctrl-C stops its owned app process cleanly.
     print(f"Open http://127.0.0.1:{config['app_port']} — press Ctrl-C here to stop the app.", flush=True)
